@@ -129,13 +129,13 @@ I am not a tooling expert. Explain each setup step simply and tell me exactly wh
 
 ### Checklist
 
-- [ ] Decision record object that stores every check result, the score, the rubric version, and the final verdict
-- [ ] All eight must-pass checks as plain functions, named as in the blueprint: data is sane, instrument is eligible, market is liquid, trade beats its costs, exit is defined, risk budget has room (order value, per-symbol cap, total exposure, entries today, settled cash), daily loss limit not hit, system is healthy (broker connected, positions match, not already holding, inside the entry window). The engine places the stop and reports the connection; the rubric only checks what it is told
-- [ ] Five score components, equal weight: trend direction, intraday momentum, volatility and volume conditions, opening range breakout, relative volume
-- [ ] Position size function: 0.5% risk and stop distance, clipped by the 25% and 80% caps, no leverage
-- [ ] Cost model: Interactive Brokers tiered commission with the USD 0.35 minimum and 1.0% cap, plus spread
-- [ ] Tests for every function, including missing data for every input
-- [ ] A test that reproduces the blueprint's $5,000 table: $1,250 position, $5 at risk with a 0.4% stop, $25 with a 2% stop
+- [x] Decision record object that stores every check result, the score, the rubric version, and the final verdict
+- [x] All eight must-pass checks as plain functions, named as in the blueprint: data is sane, instrument is eligible, market is liquid, trade beats its costs, exit is defined, risk budget has room (order value, per-symbol cap, total exposure, entries today, settled cash), daily loss limit not hit, system is healthy (broker connected, positions match, not already holding, inside the entry window). The engine places the stop and reports the connection; the rubric only checks what it is told
+- [x] Five score components, equal weight: trend direction, intraday momentum, volatility and volume conditions, opening range breakout, relative volume
+- [x] Position size function: 0.5% risk and stop distance, clipped by the 25% and 80% caps, no leverage
+- [x] Cost model: Interactive Brokers tiered commission with the USD 0.35 minimum and 1.0% cap, plus spread
+- [x] Tests for every function, including missing data for every input
+- [x] A test that reproduces the blueprint's $5,000 table: $1,250 position, $5 at risk with a 0.4% stop, $25 with a 2% stop
 
 ### Exit criteria
 
