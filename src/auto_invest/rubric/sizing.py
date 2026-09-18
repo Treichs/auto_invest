@@ -35,6 +35,10 @@ def position_size(
     )
     if reason:
         return Size(0.0, 0, 0.0, 0.0, reason)
+    for position in account.positions:
+        reason = first_missing("Position", position, "quantity", "average_price")
+        if reason:
+            return Size(0.0, 0, 0.0, 0.0, reason)
     if usable_cash is None:
         return Size(0.0, 0, 0.0, 0.0, "missing: usable settled cash")
     entry, stop = candidate.entry_price, candidate.stop_price

@@ -87,3 +87,15 @@ def test_missing_inputs_give_zero_shares_with_reason(settings):
         position_size(candidate(100.0, 98.0), account(), None, settings).reason
         == "missing: usable settled cash"
     )
+
+
+def test_incomplete_position_gives_zero_shares_with_reason(settings):
+    held = (Position("QQQ", None, 100.0),)
+    size = position_size(candidate(100.0, 98.0), account(positions=held), 5000.0, settings)
+    assert size.shares == 0
+    assert size.reason == "missing: Position.quantity"
+    held = (Position("QQQ", 30, None),)
+    assert (
+        position_size(candidate(100.0, 98.0), account(positions=held), 5000.0, settings).reason
+        == "missing: Position.average_price"
+    )
