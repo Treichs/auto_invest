@@ -1,0 +1,15 @@
+# Hard ceilings. A setting may be tightened below these freely; raising one is
+# a loosening and goes through backtest, paper, then live. Never edited by
+# Claude Code or by any user interface.
+
+risk_per_trade = 0.005
+daily_loss_limit = 0.01
+per_symbol_cap = 0.25
+total_exposure_cap = 0.80
+entries_per_day = 3
+settled_cash_only = true
+no_leverage = true
+
+entry_window_start = "10:00"
+entry_window_end = "15:30"
+forced_close = "15:50"
