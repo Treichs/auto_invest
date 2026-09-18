@@ -189,6 +189,10 @@ def system_is_healthy(candidate: Candidate | None, account: AccountState | None,
     )
     if reason:
         return CheckResult(name, False, reason)
+    for position in account.positions:
+        reason = first_missing("Position", position, "symbol", "quantity")
+        if reason:
+            return CheckResult(name, False, reason)
     if not account.broker_connected:
         return CheckResult(name, False, "broker not connected")
     if not account.positions_reconciled:

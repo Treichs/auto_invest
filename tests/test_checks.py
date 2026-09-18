@@ -263,6 +263,8 @@ def test_system_is_healthy_passes(settings):
         (None, account(), "missing: Candidate"),
         (candidate(), account(connected=None), "missing: AccountState.broker_connected"),
         (candidate(), account(positions=None), "missing: AccountState.positions"),
+        (candidate(), account(positions=(None,)), "missing: Position"),
+        (candidate(), account(positions=(Position("SPY", None, 100.0),)), "missing: Position.quantity"),
     ],
 )
 def test_system_is_healthy_fails_and_names_the_clause(settings, c, acct, fragment):
