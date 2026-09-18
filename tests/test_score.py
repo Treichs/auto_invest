@@ -53,6 +53,14 @@ def test_trend_direction_needs_253_closes(settings):
     assert trend_direction(None, settings).reason == "missing: MarketData"
 
 
+def test_trend_direction_fails_on_a_zero_close(settings):
+    bars = daily_bars()
+    zero = bars[:-1] + (Bar("SPY", bars[-1].start, 0.0, 0.0, 0.0, 0.0, 1.0),)
+    result = trend_direction(market(daily=zero), settings)
+    assert result.value == 0.0
+    assert "not a valid price" in result.reason
+
+
 def test_opening_range_breakout_above_the_range_high_scores_one(settings):
     today = minute_bars(count=61, open=100.0, step=0.0)
     assert opening_range_breakout(candidate(entry=100.5), market(today=today), settings).value == 1.0

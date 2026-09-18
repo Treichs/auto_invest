@@ -44,6 +44,8 @@ def trend_direction(market: MarketData | None, settings) -> ComponentScore:
     if not complete(market.daily_bars, "close"):
         return ComponentScore(name, 0.0, "missing: Bar.close")
     closes = [bar.close for bar in market.daily_bars]
+    if min(closes) <= 0:
+        return ComponentScore(name, 0.0, "a daily close is not a valid price")
     returns = [closes[-1] / closes[-1 - lookback] - 1 for lookback in LOOKBACKS]
     positive = sum(1 for r in returns if r > 0)
     return ComponentScore(
