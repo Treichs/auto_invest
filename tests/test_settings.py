@@ -22,8 +22,21 @@ BASE = {
     "entry_window_start": "10:00",
     "entry_window_end": "15:30",
     "forced_close": "15:50",
+    "quote_max_age_seconds": 5,
+    "price_band": 0.10,
+    "spread_cap": 0.0005,
+    "volume_floor": 1000000,
+    "max_cost_fraction_of_risk": 0.10,
+    "score_threshold": 0.6,
+    "order_value_cap": 0.25,
 }
-EXTRA = {"currency": "USD", "timezone": "America/New_York", "approved_symbols": ["SPY", "QQQ"]}
+EXTRA = {
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "approved_symbols": ["SPY", "QQQ"],
+    "opening_range_minutes": 5,
+    "history_sessions": 20,
+}
 
 
 def settings_with(**overrides) -> Settings:
@@ -48,6 +61,15 @@ def test_repo_config_files_load():
     assert settings.forced_close == time(15, 50)
     assert settings.approved_symbols == ["SPY", "QQQ"]
     assert settings.currency == "USD"
+    assert settings.quote_max_age_seconds == 5
+    assert settings.price_band == 0.10
+    assert settings.spread_cap == 0.0005
+    assert settings.volume_floor == 1000000
+    assert settings.max_cost_fraction_of_risk == 0.10
+    assert settings.score_threshold == 0.6
+    assert settings.order_value_cap == 0.25
+    assert settings.opening_range_minutes == 5
+    assert settings.history_sessions == 20
 
 
 def test_settings_at_the_ceiling_pass():
@@ -70,6 +92,21 @@ def test_tightened_settings_pass():
     )
 
 
+def test_tightened_phase_1_settings_pass():
+    check_against_ceilings(
+        settings_with(
+            quote_max_age_seconds=2,
+            price_band=0.05,
+            spread_cap=0.0002,
+            volume_floor=2000000,
+            max_cost_fraction_of_risk=0.05,
+            score_threshold=0.8,
+            order_value_cap=0.10,
+        ),
+        ceilings(),
+    )
+
+
 @pytest.mark.parametrize(
     "field, value",
     [
@@ -81,6 +118,13 @@ def test_tightened_settings_pass():
         ("entry_window_start", "09:59"),
         ("entry_window_end", "15:31"),
         ("forced_close", "15:51"),
+        ("quote_max_age_seconds", 6),
+        ("price_band", 0.11),
+        ("spread_cap", 0.0006),
+        ("volume_floor", 999999),
+        ("max_cost_fraction_of_risk", 0.11),
+        ("score_threshold", 0.59),
+        ("order_value_cap", 0.26),
     ],
 )
 def test_each_setting_over_its_ceiling_fails(field, value):

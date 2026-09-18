@@ -20,6 +20,13 @@ class Limits(BaseModel):
     entry_window_start: time
     entry_window_end: time
     forced_close: time
+    quote_max_age_seconds: float = Field(gt=0)
+    price_band: float = Field(gt=0, le=1)
+    spread_cap: float = Field(gt=0, le=1)
+    volume_floor: float = Field(ge=0)
+    max_cost_fraction_of_risk: float = Field(gt=0, le=1)
+    score_threshold: float = Field(ge=0, le=1)
+    order_value_cap: float = Field(gt=0, le=1)
 
     @model_validator(mode="after")
     def window_is_ordered(self) -> "Limits":
@@ -45,6 +52,8 @@ class Settings(Limits):
     currency: str
     timezone: str
     approved_symbols: list[str] = Field(min_length=1)
+    opening_range_minutes: int = Field(gt=0)
+    history_sessions: int = Field(gt=0)
 
 
 class CeilingExceeded(ValueError):
@@ -60,18 +69,24 @@ def check_against_ceilings(settings: Settings, ceilings: Ceilings) -> None:
         "entries_per_day",
         "entry_window_end",
         "forced_close",
+        "quote_max_age_seconds",
+        "price_band",
+        "spread_cap",
+        "max_cost_fraction_of_risk",
+        "order_value_cap",
     ]
+    at_least = ["entry_window_start", "volume_floor", "score_threshold"]
     problems = []
     for name in at_most:
         if getattr(settings, name) > getattr(ceilings, name):
             problems.append(
                 f"{name} = {getattr(settings, name)} exceeds ceiling {getattr(ceilings, name)}"
             )
-    if settings.entry_window_start < ceilings.entry_window_start:
-        problems.append(
-            f"entry_window_start = {settings.entry_window_start} is earlier than "
-            f"ceiling {ceilings.entry_window_start}"
-        )
+    for name in at_least:
+        if getattr(settings, name) < getattr(ceilings, name):
+            problems.append(
+                f"{name} = {getattr(settings, name)} is below ceiling {getattr(ceilings, name)}"
+            )
     for flag in ("settled_cash_only", "no_leverage"):
         if not getattr(settings, flag):
             problems.append(f"{flag} must be true")

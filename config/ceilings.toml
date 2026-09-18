@@ -13,3 +13,12 @@ no_leverage = true
 entry_window_start = "10:00"
 entry_window_end = "15:30"
 forced_close = "15:50"
+
+# Phase 1 placeholders. Unvalidated; Phase 2 research sets the real values.
+quote_max_age_seconds = 5
+price_band = 0.10
+spread_cap = 0.0005
+volume_floor = 1000000
+max_cost_fraction_of_risk = 0.10
+score_threshold = 0.6
+order_value_cap = 0.25
