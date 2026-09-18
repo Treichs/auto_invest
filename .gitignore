@@ -14,3 +14,6 @@ secrets/
 # Tools
 .pp-memory
 .claude/settings.local.json
+
+# Editors
+.vscode/
