@@ -1,0 +1,20 @@
+[project]
+name = "auto-invest"
+version = "0.1.0"
+description = "Personal automated trading system: rubric, settings, and engine adapters"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic>=2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
