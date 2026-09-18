@@ -1,12 +1,13 @@
 import pytest
+from datetime import timedelta
 
 from auto_invest.rubric.checks import (
     data_is_sane,
     instrument_is_eligible,
     market_is_liquid,
 )
-from auto_invest.rubric.records import Candidate, InstrumentStatus, MarketData, Quote
-from conftest import daily_bars, minute_bars, ts
+from auto_invest.rubric.records import Bar, Candidate, InstrumentStatus, MarketData, Quote
+from conftest import DAY, daily_bars, minute_bars, ts
 
 
 def quote(bid=99.99, ask=100.01, at=None):
@@ -122,3 +123,16 @@ def test_market_is_liquid_fails_when_data_is_missing(settings, c, m, expected):
     result = market_is_liquid(c, m, settings)
     assert not result.passed
     assert result.reason == expected
+
+
+def test_data_is_sane_fails_on_a_zero_last_close(settings):
+    zero = (Bar("SPY", ts(9, 30, day=DAY - timedelta(days=1)), 0.0, 0.0, 0.0, 0.0, 1.0),)
+    result = data_is_sane(candidate(), market(daily=zero), settings)
+    assert not result.passed
+    assert "not a valid price" in result.reason
+
+
+def test_market_is_liquid_fails_on_a_zero_quote(settings):
+    result = market_is_liquid(candidate(), market(q=quote(bid=0.0, ask=0.0)), settings)
+    assert not result.passed
+    assert "not a valid market" in result.reason

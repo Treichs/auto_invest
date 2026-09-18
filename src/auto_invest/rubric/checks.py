@@ -27,6 +27,8 @@ def data_is_sane(candidate: Candidate | None, market: MarketData | None, setting
     last_close = market.daily_bars[-1].close
     if last_close is None:
         return CheckResult(name, False, "missing: Bar.close")
+    if last_close <= 0:
+        return CheckResult(name, False, f"last close {last_close} is not a valid price")
     quote = market.quote
     age = (candidate.timestamp - quote.timestamp).total_seconds()
     if age > settings.quote_max_age_seconds:
@@ -68,6 +70,8 @@ def market_is_liquid(candidate: Candidate | None, market: MarketData | None, set
     if not market.today_bars:
         return CheckResult(name, False, "missing: MarketData.today_bars")
     quote = market.quote
+    if quote.bid <= 0 or quote.ask < quote.bid:
+        return CheckResult(name, False, f"bid {quote.bid} and ask {quote.ask} are not a valid market")
     mid = (quote.bid + quote.ask) / 2
     spread = (quote.ask - quote.bid) / mid
     if spread > settings.spread_cap:
