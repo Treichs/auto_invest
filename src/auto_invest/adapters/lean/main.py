@@ -68,10 +68,11 @@ class RubricAlgorithm(QCAlgorithm):
         self.candidates = {}
         self.lines = []
         self.set_warm_up(WARM_UP, Resolution.MINUTE)
-        every_day = self.date_rules.every_day(next(iter(self.symbols.values())))
+        anchor = next(iter(self.symbols.values()))
+        every_day = self.date_rules.every_day(anchor)
         self.schedule.on(every_day, self.at(settings.entry_window_start), self.open_window)
         self.schedule.on(every_day, self.at(settings.entry_window_end), self.close_window)
-        self.schedule.on(every_day, self.at(settings.forced_close), self.forced_close)
+        self.schedule.on(every_day, self.time_rules.before_market_close(anchor, 10), self.forced_close)
         folder = Path(rubric.__file__).parent
         self.log(f"rubric {RUBRIC_VERSION} sha256 {rubric_hash(folder)}")
         for line in file_hashes(folder):
