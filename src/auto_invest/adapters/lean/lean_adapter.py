@@ -178,16 +178,20 @@ def rejection_counts(lines: Iterable[str]) -> dict[str, int]:
     return counts
 
 
+def normalised_source(path: Path) -> bytes:
+    return path.read_bytes().replace(b"\r\n", b"\n").rstrip(b"\n")
+
+
 def rubric_hash(folder) -> str:
     digest = hashlib.sha256()
     for path in sorted(Path(folder).glob("*.py")):
-        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+        digest.update(normalised_source(path))
     return digest.hexdigest()
 
 
 def file_hashes(folder) -> list[str]:
     lines = []
     for path in sorted(Path(folder).glob("*.py")):
-        data = path.read_bytes().replace(b"\r\n", b"\n")
+        data = normalised_source(path)
         lines.append(f"{path.name} {len(data)} {hashlib.sha256(data).hexdigest()[:8]}")
     return lines

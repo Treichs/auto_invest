@@ -309,6 +309,8 @@ def test_rubric_hash_changes_on_one_byte_and_ignores_line_endings(tmp_path):
     target = copy / "costs.py"
     target.write_bytes(target.read_bytes().replace(b"\n", b"\r\n"))
     assert rubric_hash(copy) == rubric_hash(RUBRIC_DIR)
+    target.write_bytes(target.read_bytes() + b"\n")
+    assert rubric_hash(copy) == rubric_hash(RUBRIC_DIR)
     target.write_bytes(target.read_bytes() + b"#")
     assert rubric_hash(copy) != rubric_hash(RUBRIC_DIR)
 
