@@ -67,7 +67,7 @@ Time: about 40 minutes the first time, about 10 minutes for later runs. Cost: $0
 
     Why: the free plan cannot write to the Object Store, so the per-decision file is not saved; the `rejections` line is the record. The last line is expected, not an error.
 
-    Success: `orders` is under 10,000 and `decisions` is in the tens of thousands. Copy the `rejections` line to the scratch note.
+    Success: `orders` is under 10,000 and `decisions` is in the tens of thousands. Copy the `rejections` line to the scratch note. In the trades download (step 14), no trade's exit time is on a later date than its entry time.
 
 12. On the **Overview** tab note Total Trades, Net Profit, and Drawdown.
 
