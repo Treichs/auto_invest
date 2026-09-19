@@ -145,3 +145,54 @@ def test_set_daily_drops_a_bar_dated_today():
     bars = [to_bar("SPY", fake_bar(9, 30, d)) for d in days] + [to_bar("SPY", fake_bar(9, 30, DAY))]
     store.set_daily(bars, DAY)
     assert [bar.start.date() for bar in store.daily] == days
+
+
+from lean_adapter import DayLedger
+from rubric.records import AccountState, Position, Sale, SettlementLedger
+
+
+def started_ledger() -> DayLedger:
+    ledger = DayLedger()
+    ledger.begin_session(5000.0, 4800.0, 120.0)
+    return ledger
+
+
+def test_ledger_counts_fills_and_adds_fees_to_buys():
+    ledger = started_ledger()
+    ledger.record_buy(1250.0, 0.35)
+    ledger.record_buy(600.0, 0.35)
+    assert ledger.entries_today == 2
+    assert ledger.buys_today == pytest.approx(1850.70)
+
+
+def test_ledger_sales_are_todays_only_and_net_of_fees():
+    ledger = started_ledger()
+    ledger.record_sell(DAY, 1260.0, 0.35)
+    assert ledger.sales == (Sale(DAY, 1259.65),)
+    assert ledger.settlement_ledger() == SettlementLedger(4800.0, 0.0, (Sale(DAY, 1259.65),))
+
+
+def test_ledger_resets_at_session_start():
+    ledger = started_ledger()
+    ledger.record_buy(1250.0, 0.35)
+    ledger.record_sell(DAY, 1260.0, 0.35)
+    ledger.begin_session(5010.0, 5010.0, 130.0)
+    assert (ledger.entries_today, ledger.buys_today, ledger.sales) == (0, 0.0, ())
+    assert ledger.settlement_ledger() == SettlementLedger(5010.0, 0.0, ())
+
+
+def test_account_state_realised_is_net_profit_since_session_start():
+    ledger = started_ledger()
+    ledger.record_buy(1250.0, 0.35)
+    positions = [Position("SPY", 5.0, 250.0, 248.0)]
+    state = ledger.account_state(positions, 3550.0, 125.5, -3.0, naive(10, 5))
+    assert state == AccountState(
+        5000.0, (Position("SPY", 5.0, 250.0, 248.0),), 1, 5.5, -3.0, True, True,
+        datetime(2019, 3, 5, 10, 5, tzinfo=ET), 3550.0,
+    )
+
+
+def test_account_state_before_any_session_has_none_equity_and_realised():
+    state = DayLedger().account_state([], 5000.0, 0.0, 0.0, naive(10, 5))
+    assert state.start_of_day_equity is None
+    assert state.realised_pnl_today is None

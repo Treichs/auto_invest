@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Iterable
 from zoneinfo import ZoneInfo
 
-from rubric.records import Bar, InstrumentStatus, Quote
+from rubric.records import AccountState, Bar, InstrumentStatus, Position, Quote, Sale, SettlementLedger
 
 TIMEZONE = "America/New_York"
 NEW_YORK = ZoneInfo(TIMEZONE)
@@ -69,3 +69,52 @@ class SessionStore:
 
     def history_bars(self) -> tuple[Bar, ...]:
         return tuple(bar for day in sorted(self.sessions) for bar in self.sessions[day])
+
+
+class DayLedger:
+    def __init__(self):
+        self.start_equity: float | None = None
+        self.start_settled_cash: float | None = None
+        self.start_net_profit: float | None = None
+        self.entries_today = 0
+        self.buys_today = 0.0
+        self.sales: tuple[Sale, ...] = ()
+
+    def begin_session(self, equity: float, settled_cash: float, net_profit: float) -> None:
+        self.start_equity = equity
+        self.start_settled_cash = settled_cash
+        self.start_net_profit = net_profit
+        self.entries_today = 0
+        self.buys_today = 0.0
+        self.sales = ()
+
+    def record_buy(self, value: float, fee: float) -> None:
+        self.entries_today += 1
+        self.buys_today += value + fee
+
+    def record_sell(self, day: date, value: float, fee: float) -> None:
+        self.sales += (Sale(day, value - fee),)
+
+    def settlement_ledger(self) -> SettlementLedger:
+        return SettlementLedger(self.start_settled_cash, self.buys_today, self.sales)
+
+    def account_state(
+        self,
+        positions: Iterable[Position],
+        settled_cash: float,
+        net_profit: float,
+        unrealised: float,
+        now: datetime,
+    ) -> AccountState:
+        realised = None if self.start_net_profit is None else net_profit - self.start_net_profit
+        return AccountState(
+            self.start_equity,
+            tuple(positions),
+            self.entries_today,
+            realised,
+            unrealised,
+            True,
+            True,
+            aware(now),
+            settled_cash,
+        )
