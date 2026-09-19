@@ -84,3 +84,64 @@ def test_instrument_status_real_bar_is_not_halted():
 @pytest.mark.parametrize("bar", [None, fake_bar(10, 5, fill_forward=True)])
 def test_instrument_status_missing_or_fill_forward_bar_is_halted(bar):
     assert instrument_status("SPY", bar, True) == InstrumentStatus("SPY", True, True)
+
+
+from datetime import timedelta
+
+from lean_adapter import SessionStore
+
+
+def session_of(day: date, count: int = 3) -> list[Bar]:
+    return [to_bar("SPY", fake_bar(9, 30 + i, day)) for i in range(count)]
+
+
+def weekdays_before(day: date, count: int) -> list[date]:
+    days = []
+    cursor = day - timedelta(days=1)
+    while len(days) < count:
+        if cursor.weekday() < 5:
+            days.append(cursor)
+        cursor -= timedelta(days=1)
+    return list(reversed(days))
+
+
+def test_store_keeps_today_in_order_and_rolls_on_a_new_date():
+    store = SessionStore(20)
+    yesterday = weekdays_before(DAY, 1)[0]
+    for bar in session_of(yesterday):
+        store.add(bar, False)
+    assert store.history_bars() == ()
+    today = session_of(DAY)
+    for bar in today:
+        store.add(bar, False)
+    assert store.today_bars() == tuple(today)
+    assert store.history_bars() == tuple(session_of(yesterday))
+
+
+def test_store_drops_the_oldest_session_beyond_the_cap():
+    store = SessionStore(2)
+    days = weekdays_before(DAY, 3)
+    for day in days:
+        for bar in session_of(day):
+            store.add(bar, False)
+    for bar in session_of(DAY):
+        store.add(bar, False)
+    history = store.history_bars()
+    assert history[0].start.date() == days[1]
+    assert history[-1].start.date() == days[2]
+    assert len(history) == 6
+
+
+def test_store_ignores_fill_forward_bars():
+    store = SessionStore(20)
+    store.add(to_bar("SPY", fake_bar(9, 30)), False)
+    store.add(to_bar("SPY", fake_bar(9, 31, fill_forward=True)), True)
+    assert len(store.today_bars()) == 1
+
+
+def test_set_daily_drops_a_bar_dated_today():
+    store = SessionStore(20)
+    days = weekdays_before(DAY, 2)
+    bars = [to_bar("SPY", fake_bar(9, 30, d)) for d in days] + [to_bar("SPY", fake_bar(9, 30, DAY))]
+    store.set_daily(bars, DAY)
+    assert [bar.start.date() for bar in store.daily] == days
