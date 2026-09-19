@@ -286,3 +286,28 @@ def test_rejection_counts_groups_by_rejected_by_with_accepted_as_a_key():
         decision_line(record("accepted", None)),
     ]
     assert rejection_counts(lines) == {"accepted": 1, "market_is_liquid": 2, "signal_score": 1}
+
+
+import shutil
+
+import auto_invest.rubric
+from lean_adapter import rubric_hash
+
+RUBRIC_DIR = pathlib.Path(auto_invest.rubric.__file__).parent
+
+
+def test_rubric_hash_is_stable_and_hex():
+    first = rubric_hash(RUBRIC_DIR)
+    assert first == rubric_hash(str(RUBRIC_DIR))
+    assert len(first) == 64 and int(first, 16) >= 0
+
+
+def test_rubric_hash_changes_on_one_byte_and_ignores_line_endings(tmp_path):
+    copy = tmp_path / "rubric"
+    shutil.copytree(RUBRIC_DIR, copy, ignore=shutil.ignore_patterns("__pycache__"))
+    assert rubric_hash(copy) == rubric_hash(RUBRIC_DIR)
+    target = copy / "costs.py"
+    target.write_bytes(target.read_bytes().replace(b"\n", b"\r\n"))
+    assert rubric_hash(copy) == rubric_hash(RUBRIC_DIR)
+    target.write_bytes(target.read_bytes() + b"#")
+    assert rubric_hash(copy) != rubric_hash(RUBRIC_DIR)

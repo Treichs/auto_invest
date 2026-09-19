@@ -1,5 +1,7 @@
+import hashlib
 import json
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Iterable
 from zoneinfo import ZoneInfo
 
@@ -174,3 +176,10 @@ def rejection_counts(lines: Iterable[str]) -> dict[str, int]:
         key = json.loads(line)["rejected_by"] or "accepted"
         counts[key] = counts.get(key, 0) + 1
     return counts
+
+
+def rubric_hash(folder) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(Path(folder).glob("*.py")):
+        digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
+    return digest.hexdigest()
