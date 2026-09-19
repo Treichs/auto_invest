@@ -6,4 +6,4 @@ Columns: the rubric hash is the first eight characters the backtest logs at star
 
 | Date | Year | What changed | Rubric hash | Trades | Net return after costs | Max drawdown | Top rejecting check (count) |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| 2026-09-19 | 2019 | baseline | be9e47fe | 98 | -0.18% | 1.6% | trade_beats_its_costs (27,701) |

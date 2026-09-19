@@ -181,9 +181,9 @@ Finish with a test that reproduces the blueprint's $5,000 worked table exactly. 
 - [x] Copy the rubric files into the QuantConnect project. The free plan has no local tool, so this is copy and paste from your repo
 - [x] Set the Interactive Brokers brokerage model so fees and fills follow that broker's rules
 - [x] Entry window, forced close, limit orders, and a stop order with every entry
-- [ ] Baseline backtest on the in-sample years only
+- [x] Baseline backtest on the in-sample years only
 - [x] Research log: one line per variation tried, with date, what changed, and the result. The count is needed in Phase 3
-- [ ] Export daily returns and the trade list for Phase 3
+- [x] Export daily returns and the trade list for Phase 3
 
 ### Exit criteria
 
