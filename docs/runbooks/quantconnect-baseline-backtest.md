@@ -30,7 +30,7 @@ Time: about 40 minutes the first time, about 10 minutes for later runs. Cost: $0
 
    Success: the editor opens with a `main.py` containing a sample algorithm.
 
-4. In the file panel, use the new-folder control to add a folder named exactly `rubric`.
+4. Click the **Explorer** icon (two overlapping pages) in the vertical strip on the right edge of the editor, expand **Workspace**, hover over its heading, and click the **New Directory** icon (a folder with a `+`). Type `rubric` and press Enter.
 
    Why: the rubric files use relative imports, so they must sit in a folder with an `__init__.py`, never loose.
 
@@ -57,13 +57,17 @@ Time: about 40 minutes the first time, about 10 minutes for later runs. Cost: $0
 
    Success: the backtest page opens and the equity chart starts drawing. A one-year run takes roughly 30 minutes.
 
-10. Open the **Logs** tab. The first lines read `rubric 0.1.0 sha256 …` and `object store max size … bytes`.
+10. When the run finishes, open the **Logs** tab. The first lines read `rubric 0.1.0 sha256 …`, then one `rubric/<file> <bytes> <hash>` line per rubric file, then `object store max size … bytes`.
 
-    Success: the first eight characters of the hash match your scratch note. If they do not, stop: a rubric file was pasted wrong. Re-paste the folder and run again.
+    Why: the Logs tab fills only when the run ends; while it runs, watch the Cloud Terminal at the bottom of the editor for red text.
 
-11. When the run finishes, read the last three log lines: `decisions N saved to object store key …`, `rejections {…}`, `orders N`.
+    Success: the first eight characters of the hash match your scratch note. If they do not, compare the nine `rubric/…` lines with the build output: the file whose hash differs is the one to re-paste. Re-paste it and run again.
 
-    Success: `orders` is under 10,000 and `decisions` is in the tens of thousands. Copy the `rejections` line and the object store key to the scratch note.
+11. Read the last four log lines: `decisions N`, `rejections {…}`, `orders N`, and `object store save failed: …`.
+
+    Why: the free plan cannot write to the Object Store, so the per-decision file is not saved; the `rejections` line is the record. The last line is expected, not an error.
+
+    Success: `orders` is under 10,000 and `decisions` is in the tens of thousands. Copy the `rejections` line to the scratch note.
 
 12. On the **Overview** tab note Total Trades, Net Profit, and Drawdown.
 
@@ -73,14 +77,13 @@ Time: about 40 minutes the first time, about 10 minutes for later runs. Cost: $0
 
     Why: Phase 3 needs the trade list.
 
-14. From the top-right organization menu open **Object Store**, find the key from step 11, and download `decisions.jsonl`.
-15. Count rejections locally:
+14. Use the same download control to save the trades list and the log file next to the orders list.
 
-    ```
-    uv run python scripts/count_rejections.py <path to decisions.jsonl>
-    ```
+    Why: the trades list carries entry and exit times; the log file carries the hash lines and the `rejections` line.
 
-    Success: the counts match the `rejections` log line.
+    Success: three files next to your scratch note.
+
+15. Only on a paid organization: open **Object Store** from the top-right organization menu, download `decisions.jsonl`, and count rejections locally with `uv run python scripts/count_rejections.py <path to decisions.jsonl>`. The free plan cannot write to the Object Store, so skip this step there.
 
 ## E. Record the run
 
