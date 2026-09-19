@@ -1,8 +1,10 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Iterable
 from zoneinfo import ZoneInfo
 
-from rubric.records import AccountState, Bar, InstrumentStatus, Position, Quote, Sale, SettlementLedger
+from rubric.bars import bars_in_window
+from rubric.records import AccountState, Bar, Candidate, InstrumentStatus, MarketData, Position, Quote, Sale, SettlementLedger
+from rubric.score import OPEN
 
 TIMEZONE = "America/New_York"
 NEW_YORK = ZoneInfo(TIMEZONE)
@@ -118,3 +120,19 @@ class DayLedger:
             aware(now),
             settled_cash,
         )
+
+
+def opening_range_low(today_bars: Iterable[Bar], minutes: int) -> float | None:
+    end = (datetime.combine(datetime.min, OPEN) + timedelta(minutes=minutes)).time()
+    window = bars_in_window(today_bars, OPEN, end, TIMEZONE)
+    if len(window) != minutes:
+        return None
+    return min(bar.low for bar in window)
+
+
+def candidate(symbol: str, quote: Quote, today_bars: Iterable[Bar], minutes: int, now: datetime) -> Candidate:
+    return Candidate(symbol, quote.ask, opening_range_low(today_bars, minutes), aware(now))
+
+
+def market_data(quote: Quote, store: SessionStore) -> MarketData:
+    return MarketData(quote, store.today_bars(), store.history_bars(), store.daily)

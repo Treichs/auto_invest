@@ -196,3 +196,40 @@ def test_account_state_before_any_session_has_none_equity_and_realised():
     state = DayLedger().account_state([], 5000.0, 0.0, 0.0, naive(10, 5))
     assert state.start_of_day_equity is None
     assert state.realised_pnl_today is None
+
+
+from lean_adapter import candidate, market_data, opening_range_low
+from rubric.records import Candidate, MarketData
+
+
+def opening_bars(lows=(99.5, 99.2, 99.8, 99.4, 99.9)) -> list[Bar]:
+    return [to_bar("SPY", fake_bar(9, 30 + i, low=low)) for i, low in enumerate(lows)]
+
+
+def test_opening_range_low_is_the_lowest_low_of_the_first_minutes():
+    bars = opening_bars() + [to_bar("SPY", fake_bar(9, 35, low=90.0))]
+    assert opening_range_low(bars, 5) == 99.2
+
+
+def test_opening_range_low_is_none_when_a_bar_is_missing():
+    assert opening_range_low(opening_bars()[:4], 5) is None
+    assert opening_range_low((), 5) is None
+
+
+def test_candidate_uses_the_ask_and_the_range_low_and_is_aware():
+    quote = Quote("SPY", 99.99, 100.01, aware(naive(10, 5)))
+    result = candidate("SPY", quote, opening_bars(), 5, naive(10, 5))
+    assert result == Candidate("SPY", 100.01, 99.2, datetime(2019, 3, 5, 10, 5, tzinfo=ET))
+
+
+def test_candidate_with_no_quote_or_range_carries_none_for_the_rubric_to_reject():
+    result = candidate("SPY", Quote("SPY", None, None, None), (), 5, naive(10, 5))
+    assert (result.entry_price, result.stop_price) == (None, None)
+
+
+def test_market_data_bundles_the_store():
+    store = SessionStore(20)
+    for bar in opening_bars():
+        store.add(bar, False)
+    quote = Quote("SPY", 99.99, 100.01, aware(naive(10, 5)))
+    assert market_data(quote, store) == MarketData(quote, tuple(opening_bars()), (), ())
