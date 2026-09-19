@@ -233,3 +233,56 @@ def test_market_data_bundles_the_store():
         store.add(bar, False)
     quote = Quote("SPY", 99.99, 100.01, aware(naive(10, 5)))
     assert market_data(quote, store) == MarketData(quote, tuple(opening_bars()), (), ())
+
+
+import json
+
+from lean_adapter import decision_line, rejection_counts
+from rubric.checks import CheckResult
+from rubric.decision import DecisionRecord
+from rubric.score import ComponentScore, SignalScore
+from rubric.sizing import Size
+
+CHECKS = tuple(CheckResult(name, True, "ok") for name in (
+    "data_is_sane", "instrument_is_eligible", "market_is_liquid", "trade_beats_its_costs",
+    "exit_is_defined", "risk_budget_has_room", "daily_loss_limit_not_hit", "system_is_healthy",
+))
+SCORE = SignalScore((ComponentScore("trend_direction", 1.0, "4 of 4"),), 0.8, 0.6, True)
+
+
+def record(verdict: str, rejected_by: str | None, checks=CHECKS, score=SCORE, size=Size(1250.0, 5, 25.0, 25.0)):
+    return DecisionRecord("0.1.0", "SPY", aware(naive(10, 5)), checks, score, size, verdict, rejected_by)
+
+
+def test_decision_line_for_a_rejected_check_names_it_and_its_reason():
+    checks = CHECKS[:2] + (CheckResult("market_is_liquid", False, "spread 0.0600% is over the cap 0.0500%"),) + CHECKS[3:]
+    line = json.loads(decision_line(record("rejected", "market_is_liquid", checks)))
+    assert line["rejected_by"] == "market_is_liquid"
+    assert line["reason"] == "spread 0.0600% is over the cap 0.0500%"
+    assert line["checks"]["market_is_liquid"] is False and line["checks"]["data_is_sane"] is True
+    assert (line["score"], line["shares"], line["symbol"], line["rubric_version"]) == (0.8, 5, "SPY", "0.1.0")
+    assert line["timestamp"] == "2019-03-05T10:05:00-05:00"
+    assert "record" not in line
+
+
+def test_decision_line_for_a_score_rejection_states_the_threshold():
+    score = SignalScore(SCORE.components, 0.4, 0.6, False)
+    line = json.loads(decision_line(record("rejected", "signal_score", score=score)))
+    assert line["reason"] == "score 0.400 is under the threshold 0.6"
+
+
+def test_decision_line_for_an_accepted_decision_carries_the_full_record():
+    full = record("accepted", None)
+    line = json.loads(decision_line(full))
+    assert line["reason"] is None
+    assert line["record"] == full.to_dict()
+
+
+def test_rejection_counts_groups_by_rejected_by_with_accepted_as_a_key():
+    lines = [
+        decision_line(record("rejected", "market_is_liquid")),
+        decision_line(record("rejected", "market_is_liquid")),
+        decision_line(record("rejected", "signal_score")),
+        decision_line(record("accepted", None)),
+    ]
+    assert rejection_counts(lines) == {"accepted": 1, "market_is_liquid": 2, "signal_score": 1}

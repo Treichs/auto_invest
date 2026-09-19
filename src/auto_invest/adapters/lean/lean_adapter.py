@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime, timedelta
 from typing import Iterable
 from zoneinfo import ZoneInfo
@@ -136,3 +137,40 @@ def candidate(symbol: str, quote: Quote, today_bars: Iterable[Bar], minutes: int
 
 def market_data(quote: Quote, store: SessionStore) -> MarketData:
     return MarketData(quote, store.today_bars(), store.history_bars(), store.daily)
+
+
+def decision_line(record) -> str:
+    data = record.to_dict()
+    failing = next((check for check in data["checks"] if not check["passed"]), None)
+    score = data["score"]
+    size = data["size"]
+    if failing is not None:
+        reason = failing["reason"]
+    elif score is not None and not score["passed"]:
+        reason = f"score {score['value']:.3f} is under the threshold {score['threshold']}"
+    elif size is not None and size["shares"] < 1:
+        reason = size["reason"] or "no shares to trade"
+    else:
+        reason = None
+    line = {
+        "timestamp": data["timestamp"],
+        "symbol": data["symbol"],
+        "verdict": data["verdict"],
+        "rejected_by": data["rejected_by"],
+        "reason": reason,
+        "checks": {check["name"]: check["passed"] for check in data["checks"]},
+        "score": None if score is None else score["value"],
+        "shares": None if size is None else size["shares"],
+        "rubric_version": data["rubric_version"],
+    }
+    if data["verdict"] == "accepted":
+        line["record"] = data
+    return json.dumps(line)
+
+
+def rejection_counts(lines: Iterable[str]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for line in lines:
+        key = json.loads(line)["rejected_by"] or "accepted"
+        counts[key] = counts.get(key, 0) + 1
+    return counts
