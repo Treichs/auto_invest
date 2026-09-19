@@ -183,3 +183,11 @@ def rubric_hash(folder) -> str:
     for path in sorted(Path(folder).glob("*.py")):
         digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()
+
+
+def file_hashes(folder) -> list[str]:
+    lines = []
+    for path in sorted(Path(folder).glob("*.py")):
+        data = path.read_bytes().replace(b"\r\n", b"\n")
+        lines.append(f"{path.name} {len(data)} {hashlib.sha256(data).hexdigest()[:8]}")
+    return lines

@@ -10,6 +10,7 @@ from lean_adapter import (
     SessionStore,
     candidate,
     decision_line,
+    file_hashes,
     instrument_status,
     market_data,
     rejection_counts,
@@ -71,7 +72,10 @@ class RubricAlgorithm(QCAlgorithm):
         self.schedule.on(every_day, self.at(settings.entry_window_start), self.open_window)
         self.schedule.on(every_day, self.at(settings.entry_window_end), self.close_window)
         self.schedule.on(every_day, self.at(settings.forced_close), self.forced_close)
-        self.log(f"rubric {RUBRIC_VERSION} sha256 {rubric_hash(Path(rubric.__file__).parent)}")
+        folder = Path(rubric.__file__).parent
+        self.log(f"rubric {RUBRIC_VERSION} sha256 {rubric_hash(folder)}")
+        for line in file_hashes(folder):
+            self.log(f"rubric/{line}")
         self.log(f"object store max size {self.object_store.max_size} bytes")
 
     def at(self, moment):

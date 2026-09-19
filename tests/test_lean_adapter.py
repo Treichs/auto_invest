@@ -291,7 +291,7 @@ def test_rejection_counts_groups_by_rejected_by_with_accepted_as_a_key():
 import shutil
 
 import auto_invest.rubric
-from lean_adapter import rubric_hash
+from lean_adapter import file_hashes, rubric_hash
 
 RUBRIC_DIR = pathlib.Path(auto_invest.rubric.__file__).parent
 
@@ -311,3 +311,10 @@ def test_rubric_hash_changes_on_one_byte_and_ignores_line_endings(tmp_path):
     assert rubric_hash(copy) == rubric_hash(RUBRIC_DIR)
     target.write_bytes(target.read_bytes() + b"#")
     assert rubric_hash(copy) != rubric_hash(RUBRIC_DIR)
+
+
+def test_file_hashes_lists_every_rubric_file_with_size_and_short_hash():
+    lines = file_hashes(RUBRIC_DIR)
+    assert [line.split()[0] for line in lines] == sorted(p.name for p in RUBRIC_DIR.glob("*.py"))
+    name, size, digest = lines[0].split()
+    assert name == "__init__.py" and int(size) == len((RUBRIC_DIR / name).read_bytes()) and len(digest) == 8

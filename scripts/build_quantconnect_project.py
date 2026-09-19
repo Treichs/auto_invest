@@ -13,7 +13,7 @@ OUT = ROOT / "build" / "quantconnect"
 
 sys.path[:0] = [str(PACKAGE), str(ADAPTER)]
 
-from lean_adapter import rubric_hash
+from lean_adapter import file_hashes, rubric_hash
 
 
 def snapshot_source() -> str:
@@ -42,6 +42,8 @@ def main() -> None:
     ).stdout.strip()
     print(f"wrote {len(files)} files to {OUT}")
     print(f"rubric sha256 {rubric_hash(RUBRIC)}")
+    for line in file_hashes(RUBRIC):
+        print(f"rubric/{line}")
     print(f"git commit {commit}")
 
 
