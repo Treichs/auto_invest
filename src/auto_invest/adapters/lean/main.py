@@ -200,8 +200,13 @@ class RubricAlgorithm(QCAlgorithm):
             ticket.update_limit_price(float(self.securities[self.symbols[ticker]].bid_price), "re-priced to the bid")
 
     def on_end_of_algorithm(self):
-        key = f"auto_invest/{self.algorithm_id}/decisions.jsonl"
-        self.object_store.save(key, "\n".join(self.lines) + "\n")
-        self.log(f"decisions {len(self.lines)} saved to object store key {key}")
+        self.log(f"decisions {len(self.lines)}")
         self.log(f"rejections {json.dumps(rejection_counts(self.lines), sort_keys=True)}")
         self.log(f"orders {len(list(self.transactions.get_orders()))}")
+        key = f"auto_invest/{self.algorithm_id}/decisions.jsonl"
+        try:
+            self.object_store.save(key, "\n".join(self.lines) + "\n")
+        except Exception as error:
+            self.log(f"object store save failed: {error}")
+            return
+        self.log(f"decisions saved to object store key {key}")
