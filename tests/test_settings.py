@@ -36,6 +36,7 @@ EXTRA = {
     "approved_symbols": ["SPY", "QQQ"],
     "opening_range_minutes": 5,
     "history_sessions": 20,
+    "candidate_interval_minutes": 5,
 }
 
 
@@ -159,3 +160,11 @@ def test_missing_setting_is_rejected():
     del data["entries_per_day"]
     with pytest.raises(ValidationError, match="entries_per_day"):
         Settings.model_validate(data)
+
+
+def test_candidate_interval_is_a_positive_int_and_not_ceilinged():
+    settings = load_settings()
+    assert settings.candidate_interval_minutes == 5
+    assert "candidate_interval_minutes" not in Ceilings.model_fields
+    with pytest.raises(ValidationError):
+        Settings.model_validate({**BASE, **EXTRA, "candidate_interval_minutes": 0})

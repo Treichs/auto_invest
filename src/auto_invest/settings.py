@@ -54,6 +54,7 @@ class Settings(Limits):
     approved_symbols: list[str] = Field(min_length=1)
     opening_range_minutes: int = Field(gt=0)
     history_sessions: int = Field(gt=0)
+    candidate_interval_minutes: int = Field(gt=0)
 
 
 class CeilingExceeded(ValueError):

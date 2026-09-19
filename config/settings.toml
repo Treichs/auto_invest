@@ -27,3 +27,4 @@ score_threshold = 0.6
 order_value_cap = 0.25
 opening_range_minutes = 5
 history_sessions = 20
+candidate_interval_minutes = 5
