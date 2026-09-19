@@ -319,4 +319,4 @@ def test_file_hashes_lists_every_rubric_file_with_size_and_short_hash():
     lines = file_hashes(RUBRIC_DIR)
     assert [line.split()[0] for line in lines] == sorted(p.name for p in RUBRIC_DIR.glob("*.py"))
     name, size, digest = lines[0].split()
-    assert name == "__init__.py" and int(size) == len((RUBRIC_DIR / name).read_bytes()) and len(digest) == 8
+    assert name == "__init__.py" and int(size) == len((RUBRIC_DIR / name).read_bytes().rstrip(b"\n")) and len(digest) == 8
